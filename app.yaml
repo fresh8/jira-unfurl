@@ -3,3 +3,7 @@ api_version: go1
 handlers:
 - url: /api/.*
   script: _go_app
+
+skip_files:
+- .git/
+- tags
