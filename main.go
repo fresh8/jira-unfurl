@@ -8,33 +8,43 @@ import (
 )
 
 func main() {
-	http.HandleFunc("/api/challenge", handleChallenge)
+	http.HandleFunc("/api/events", handleEvents)
 	appengine.Main()
 }
 
-func handleChallenge(w http.ResponseWriter, r *http.Request) {
+func handleEvents(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	var challenge challenge
+	var event Event
 
 	defer r.Body.Close()
 
 	dec := json.NewDecoder(r.Body)
 
-	err := dec.Decode(&challenge)
+	err := dec.Decode(&event)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	w.Header().Set("Content-type", "text/plain")
-	w.Write([]byte(challenge.Challenge))
+
+	switch event.Type {
+	case "url_verification":
+		w.Header().Set("Content-type", "text/plain")
+		w.Write([]byte(event.Challenge))
+		return
+
+	}
 }
 
-type challenge struct {
-	Token     string `json:"token"`
-	Challenge string `json:"challenge"`
-	Type      string `json:"type"`
+type Event struct {
+	Token       string   `json:"token"`
+	Challenge   string   `json:"challenge,omitempty"`
+	Type        string   `json:"type"`
+	TeamID      string   `json:"team_id"`
+	ApiAppID    string   `json:"api_app_id"`
+	AuthedUsers []string `json:"authed_users"`
+	EventID     string   `json:"event_id"`
 }
